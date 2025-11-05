@@ -5,9 +5,7 @@ CatRoom is a Cleanroom+Bukkit+Spigot server software forked from [CatServer](htt
 
 Cleanroom version: 0.3.24-alpha
 
-## Warnings
-
-- Java 25 is unstable and may cause problems
+## This edition is intended solely for VoidStudio servers. This edition will not support for public usage
 
 ## Features:
 

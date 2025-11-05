@@ -1,4 +1,4 @@
-rootProject.name = 'CatRoomEF'
+rootProject.name = 'VoidRoom'
 
 include ':mcp'
 include ':minecraft'
