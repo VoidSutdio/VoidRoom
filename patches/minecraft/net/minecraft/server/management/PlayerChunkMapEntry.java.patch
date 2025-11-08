@@ -1,6 +1,24 @@
 --- before/net/minecraft/server/management/PlayerChunkMapEntry.java
 +++ after/net/minecraft/server/management/PlayerChunkMapEntry.java
-@@ -23,21 +23,30 @@
+@@ -4,6 +4,8 @@
+ import com.google.common.collect.Iterables;
+ import com.google.common.collect.Lists;
+ import java.util.List;
++import java.util.concurrent.atomic.AtomicBoolean;
++import java.util.function.Consumer;
+ import javax.annotation.Nullable;
+ import net.minecraft.entity.player.EntityPlayerMP;
+ import net.minecraft.network.Packet;
+@@ -16,28 +18,45 @@
+ import net.minecraft.util.math.BlockPos;
+ import net.minecraft.util.math.ChunkPos;
+ import net.minecraft.world.chunk.Chunk;
++import net.minecraftforge.common.chunkio.ChunkIOExecutor;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
++import tech.funkyra.catroom.AsyncChunkLoadCallback;
+ 
+ public class PlayerChunkMapEntry
  {
      private static final Logger LOGGER = LogManager.getLogger();
      private final PlayerChunkMap playerChunkMap;
@@ -15,37 +33,43 @@
      private int changedSectionFilter;
      private long lastUpdateInhabitedTime;
      private boolean sentToPlayers;
-+    private Runnable loadedRunnable = new Runnable()
-+    {
-+        public void run()
-+        {
-+            PlayerChunkMapEntry.this.chunk = PlayerChunkMapEntry.this.playerChunkMap.getWorldServer().getChunkProvider().loadChunk(PlayerChunkMapEntry.this.pos.x, PlayerChunkMapEntry.this.pos.z);
-+            PlayerChunkMapEntry.this.loading = false;
-+        }
++    private final Runnable loadedRunnable = () -> {
++        PlayerChunkMapEntry.this.chunk = PlayerChunkMapEntry.this.playerChunkMap.getWorldServer().getChunkProvider().provideChunk(PlayerChunkMapEntry.this.pos.x, PlayerChunkMapEntry.this.pos.z);
++        PlayerChunkMapEntry.this.loading.set(false);
 +    };
-+    private boolean loading = true;
++
++    private final AtomicBoolean loading = new AtomicBoolean(true);
  
      public PlayerChunkMapEntry(PlayerChunkMap mapIn, int chunkX, int chunkZ)
      {
          this.playerChunkMap = mapIn;
          this.pos = new ChunkPos(chunkX, chunkZ);
 -        this.chunk = mapIn.getWorldServer().getChunkProvider().loadChunk(chunkX, chunkZ);
-+        mapIn.getWorldServer().getChunkProvider().loadChunk(chunkX, chunkZ, this.loadedRunnable);
++        int dim = mapIn.getWorldServer().dimension;
++
++        if (dim > -1000 && dim < 1000) {
++            mapIn.getWorldServer().getChunkProvider().loadChunk(chunkX, chunkZ, this.loadedRunnable);
++        } else {
++            mapIn.getWorldServer().getChunkProvider().provideChunk(chunkX, chunkZ, chunk -> {
++                PlayerChunkMapEntry.this.chunk = chunk;
++                PlayerChunkMapEntry.this.loading.set(false);
++            }, true);
++        }
      }
  
      public ChunkPos getPos()
-@@ -49,9 +58,7 @@
+@@ -49,9 +68,7 @@
      {
          if (this.players.contains(player))
          {
 -            LOGGER.debug(
 -                "Failed to add player. {} already is in chunk {}, {}", player, this.pos.x, this.pos.z
 -            );
-+            LOGGER.debug("Failed to add player. {} already is in chunk {}, {}", player, Integer.valueOf(this.pos.x), Integer.valueOf(this.pos.z));
++            LOGGER.debug("Failed to add player. {} already is in chunk {}, {}", player, this.pos.x, this.pos.z);
          }
          else
          {
-@@ -65,6 +72,8 @@
+@@ -65,6 +82,8 @@
              if (this.sentToPlayers)
              {
                  this.sendToPlayer(player);
@@ -54,7 +78,7 @@
              }
          }
      }
-@@ -73,6 +82,20 @@
+@@ -73,6 +92,22 @@
      {
          if (this.players.contains(player))
          {
@@ -65,7 +89,9 @@
 +
 +                if (this.players.isEmpty())
 +                {
-+                    if (this.loading) net.minecraftforge.common.chunkio.ChunkIOExecutor.dropQueuedChunkLoad(this.playerChunkMap.getWorldServer(), this.pos.x, this.pos.z, this.loadedRunnable);
++                    int dim = this.playerChunkMap.getWorldServer().dimension;
++                    if (dim > -1000 && dim < 1000 && this.loading.get())
++                        ChunkIOExecutor.dropQueuedChunkLoad(this.playerChunkMap.getWorldServer(), this.pos.x, this.pos.z, this.loadedRunnable);
 +                    this.playerChunkMap.removeEntry(this);
 +                }
 +
@@ -75,7 +101,7 @@
              if (this.sentToPlayers)
              {
                  player.connection.sendPacket(new SPacketUnloadChunk(this.pos.x, this.pos.z));
-@@ -80,6 +103,8 @@
+@@ -80,6 +115,8 @@
  
              this.players.remove(player);
  
@@ -84,35 +110,36 @@
              if (this.players.isEmpty())
              {
                  this.playerChunkMap.removeEntry(this);
-@@ -89,6 +114,7 @@
+@@ -89,26 +126,14 @@
  
      public boolean providePlayerChunk(boolean canGenerate)
      {
-+        if (this.loading) return false;
++        if (this.loading.get()) return false;
          if (this.chunk != null)
          {
              return true;
-@@ -97,17 +123,11 @@
+         }
+         else
          {
-             if (canGenerate)
-             {
+-            if (canGenerate)
+-            {
 -                this.chunk = this.playerChunkMap
 -                                      .getWorldServer()
 -                                      .getChunkProvider()
 -                                      .provideChunk(this.pos.x, this.pos.z);
-+                this.chunk = this.playerChunkMap.getWorldServer().getChunkProvider().provideChunk(this.pos.x, this.pos.z);
-             }
-             else
-             {
+-            }
+-            else
+-            {
 -                this.chunk = this.playerChunkMap
 -                                      .getWorldServer()
 -                                      .getChunkProvider()
 -                                      .loadChunk(this.pos.x, this.pos.z);
-+                this.chunk = this.playerChunkMap.getWorldServer().getChunkProvider().loadChunk(this.pos.x, this.pos.z);
-             }
+-            }
++            this.chunk = this.playerChunkMap.getWorldServer().getChunkProvider().provideChunk(this.pos.x, this.pos.z);
  
              return this.chunk != null;
-@@ -133,12 +153,15 @@
+         }
+@@ -133,12 +158,15 @@
              this.changes = 0;
              this.changedSectionFilter = 0;
              this.sentToPlayers = true;
@@ -128,7 +155,7 @@
              }
  
              return true;
-@@ -177,18 +200,19 @@
+@@ -177,18 +205,19 @@
  
              this.changedSectionFilter |= 1 << (y >> 4);
  
@@ -151,7 +178,7 @@
                  this.changedBlocks[this.changes++] = short1;
              }
          }
-@@ -198,13 +222,14 @@
+@@ -198,13 +227,14 @@
      {
          if (this.sentToPlayers)
          {
@@ -168,7 +195,7 @@
      public void update()
      {
          if (this.sentToPlayers && this.chunk != null)
-@@ -218,28 +243,57 @@
+@@ -218,28 +248,57 @@
                      int k = (this.changedBlocks[0] >> 8 & 15) + this.pos.z * 16;
                      BlockPos blockpos = new BlockPos(i, j, k);
                      this.sendPacket(new SPacketBlockChange(this.playerChunkMap.getWorldServer(), blockpos));
@@ -232,7 +259,7 @@
                          {
                              this.sendBlockEntity(this.playerChunkMap.getWorldServer().getTileEntity(blockpos1));
                          }
-@@ -279,7 +333,7 @@
+@@ -279,7 +338,7 @@
      {
          int i = 0;
  
@@ -241,7 +268,7 @@
          {
              EntityPlayerMP entityplayermp = this.players.get(i);
  
-@@ -318,5 +372,10 @@
+@@ -318,5 +377,10 @@
          }
  
          return d0;

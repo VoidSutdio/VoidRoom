@@ -16,7 +16,6 @@ import java.util.UUID;
 
 import net.minecraft.block.BlockChorusFlower;
 import net.minecraft.block.BlockLeaves;
-import net.minecraft.block.BlockNewLeaf;
 import net.minecraft.block.BlockOldLeaf;
 import net.minecraft.block.BlockOldLog;
 import net.minecraft.block.BlockPlanks;
@@ -117,7 +116,6 @@ import net.minecraft.network.play.server.SPacketCustomSound;
 import net.minecraft.network.play.server.SPacketEffect;
 import net.minecraft.network.play.server.SPacketParticles;
 import net.minecraft.network.play.server.SPacketTimeUpdate;
-import net.minecraft.network.play.server.SPacketWorldBorder;
 import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -127,9 +125,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.MinecraftException;
-import net.minecraft.world.WorldProviderEnd;
-import net.minecraft.world.WorldProviderHell;
-import net.minecraft.world.WorldProviderSurface;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraft.world.gen.feature.WorldGenBigMushroom;
@@ -272,11 +267,11 @@ public class CraftWorld implements World {
     }
 
     public boolean isChunkLoaded(int x, int z) {
-        return world.getChunkProvider().chunkExists(x, z);
+        return this.world.getChunkProvider().getChunkIfLoaded(x, z) != null;
     }
 
     public Chunk[] getLoadedChunks() {
-        Object[] chunks = world.getChunkProvider().loadedChunks.values().toArray();
+        Object[] chunks = this.world.getChunkProvider().getLoadedChunks().toArray();
         Chunk[] craftChunks = new CraftChunk[chunks.length];
 
         for (int i = 0; i < chunks.length; i++) {
@@ -345,22 +340,21 @@ public class CraftWorld implements World {
             return false;
         }
 
-        final long chunkKey = ChunkPos.asLong(x, z);
-        world.getChunkProvider().droppedChunks.remove(chunkKey);
+        world.getChunkProvider().removeChunkFromQueue(x, z);
 
         net.minecraft.world.chunk.Chunk chunk = null;
 
-        chunk = world.getChunkProvider().chunkGenerator.generateChunk(x, z);
+        chunk = world.getChunkProvider().getChunkGenerator().generateChunk(x, z);
         PlayerChunkMapEntry playerChunk = world.getPlayerChunkMap().getEntry(x, z);
         if (playerChunk != null) {
             playerChunk.chunk = chunk;
         }
 
         if (chunk != null) {
-            world.getChunkProvider().loadedChunks.put(chunkKey, chunk);
+            world.getChunkProvider().addLoadedChunk(chunk);
 
             chunk.onLoad();
-            chunk.populateCB(world.getChunkProvider(), world.getChunkProvider().chunkGenerator, true);
+            chunk.populateCB(world.getChunkProvider(), world.getChunkProvider().getChunkGenerator(), true);
 
             refreshChunk(x, z);
         }
@@ -1683,7 +1677,7 @@ public class CraftWorld implements World {
             return;
         }
 
-        ChunkProviderServer cps = world.getChunkProvider();
+        ChunkProviderServer cps = (ChunkProviderServer) world.getChunkProvider();
         for (net.minecraft.world.chunk.Chunk chunk : cps.loadedChunks.values()) {
             // If in use, skip it
             if (isChunkInUse(chunk.x, chunk.z)) {

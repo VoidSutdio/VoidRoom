@@ -32,7 +32,7 @@
 +        for (ChunkPos coord : this.eligibleChunksForSpawning) {
 +            int x = coord.x;
 +            int z = coord.z;
-+            if (!((ChunkProviderServer) server.chunkProvider).droppedChunks.contains(coord) && server.isChunkLoaded(x, z, true)) {
++            if (!server.chunkProvider.isUnloading(x, z) && server.isChunkLoaded(x, z, true)) {
 +                i += Objects.requireNonNull(server.getChunkProvider().getLoadedChunk(x, z)).entityCount.get(oClass);
 +            }
 +        }

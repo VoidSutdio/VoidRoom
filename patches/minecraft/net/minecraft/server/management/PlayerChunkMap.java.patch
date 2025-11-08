@@ -99,7 +99,7 @@
 +    public final boolean isChunkInUse(int x, int z) {
 +        PlayerChunkMapEntry pi = getEntry(x, z);
 +        if (pi != null) {
-+            return (pi.players.size() > 0);
++            return !pi.players.isEmpty();
 +        }
 +        return false;
 +    }
@@ -236,16 +236,18 @@
          ChunkPos chunkpos = entry.getPos();
          long i = getIndex(chunkpos.x, chunkpos.z);
          entry.updateChunkInhabitedTime();
-@@ -440,9 +493,78 @@
+@@ -438,11 +491,74 @@
+         this.dirtyEntries.remove(entry);
+         this.pendingSendToPlayers.remove(entry);
          this.entriesWithoutChunks.remove(entry);
-         Chunk chunk = entry.getChunk();
- 
+-        Chunk chunk = entry.getChunk();
+-
 -        if (chunk != null)
-+        if (false && chunk != null) // CatServer - use craftbukkit timing unload chunk
-         {
-             this.getWorldServer().getChunkProvider().queueUnload(chunk);
-         }
-     }
+-        {
+-            this.getWorldServer().getChunkProvider().queueUnload(chunk);
+-        }
+-    }
++    }
 +
 +    // CraftBukkit start - Sorter to load nearby chunks first
 +    private static class ChunkCoordComparator implements java.util.Comparator<ChunkPos> {

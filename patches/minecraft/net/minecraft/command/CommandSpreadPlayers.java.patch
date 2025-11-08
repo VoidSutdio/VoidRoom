@@ -109,7 +109,7 @@
 +
 +            // CraftBukkit start - add a version of getBlockState which force loads chunks
 +            private static IBlockState getBlockState(World world, BlockPos position) {
-+                ((ChunkProviderServer) world.getChunkProvider()).loadChunk(position.getX() >> 4, position.getZ() >> 4);
++                world.getChunkProvider().provideChunk(position.getX() >> 4, position.getZ() >> 4);
 +                return world.getBlockState(position);
 +            }
 +            // CraftBukkit end

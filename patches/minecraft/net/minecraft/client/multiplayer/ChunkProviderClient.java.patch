@@ -1,6 +1,6 @@
 --- before/net/minecraft/client/multiplayer/ChunkProviderClient.java
 +++ after/net/minecraft/client/multiplayer/ChunkProviderClient.java
-@@ -3,6 +3,7 @@
+@@ -3,17 +3,24 @@
  import com.google.common.base.MoreObjects;
  import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
  import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -8,7 +8,24 @@
  import javax.annotation.Nullable;
  import net.minecraft.util.math.ChunkPos;
  import net.minecraft.world.World;
-@@ -21,7 +22,6 @@
+ import net.minecraft.world.chunk.Chunk;
+ import net.minecraft.world.chunk.EmptyChunk;
+ import net.minecraft.world.chunk.IChunkProvider;
++import net.minecraft.world.chunk.storage.IChunkLoader;
++import net.minecraft.world.gen.IChunkGenerator;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
++import java.util.Collection;
++import java.util.List;
++import java.util.Map;
++
+ @SideOnly(Side.CLIENT)
+ public class ChunkProviderClient implements IChunkProvider
+ {
+@@ -21,7 +28,6 @@
      private final Chunk blankChunk;
      private final Long2ObjectMap<Chunk> loadedChunks = new Long2ObjectOpenHashMap<Chunk>(8192)
      {
@@ -16,7 +33,7 @@
          protected void rehash(int p_rehash_1_)
          {
              if (p_rehash_1_ > this.key.length)
-@@ -51,51 +51,49 @@
+@@ -51,53 +57,112 @@
      }
  
      @Nullable
@@ -37,6 +54,32 @@
      }
  
 -    @Override
++    @Nullable
++    @Override
++    public Chunk loadChunk(int x, int z, Runnable runnable) {
++        return null;
++    }
++
++    @Override
++    public boolean unloadChunk(Chunk chunk, boolean save) {
++        return false;
++    }
++
++    @Override
++    public boolean isUnloading(int x, int z) {
++        return false;
++    }
++
++    @Override
++    public void queueUnloadAll() {
++
++    }
++
++    @Override
++    public void queueUnload(Chunk chunk) {
++
++    }
++
      public Chunk provideChunk(int x, int z)
      {
 -        return MoreObjects.firstNonNull(this.getLoadedChunk(x, z), this.blankChunk);
@@ -75,3 +118,40 @@
      public boolean isChunkGeneratedAt(int x, int z)
      {
          return this.loadedChunks.containsKey(ChunkPos.asLong(x, z));
++    }
++
++    @Override
++    public int getLoadedChunkCount() {
++        return 0;
++    }
++
++    @Override
++    public IChunkLoader getChunkLoader() {
++        return null;
++    }
++
++    @Override
++    public IChunkGenerator getChunkGenerator() {
++        return null;
++    }
++
++    @Override
++    public void removeChunkFromQueue(int x, int z) {
++
++    }
++
++    @Override
++    public void addLoadedChunk(Chunk chunk) {
++
++    }
++
++    @Override
++    public Chunk getChunkIfLoaded(int x, int z) {
++        return null;
++    }
++
++    @Override
++    public Collection<Chunk> getLoadedChunks() {
++        return List.of();
+     }
+ }

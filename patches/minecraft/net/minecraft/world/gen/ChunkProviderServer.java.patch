@@ -1,6 +1,6 @@
 --- before/net/minecraft/world/gen/ChunkProviderServer.java
 +++ after/net/minecraft/world/gen/ChunkProviderServer.java
-@@ -1,9 +1,12 @@
+@@ -1,14 +1,14 @@
  package net.minecraft.world.gen;
  
 +import catserver.server.CatAsyncCatcher;
@@ -11,9 +11,15 @@
  import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 +import it.unimi.dsi.fastutil.objects.ObjectIterator;
  import java.io.IOException;
- import java.util.Collection;
- import java.util.Iterator;
-@@ -22,18 +25,26 @@
+-import java.util.Collection;
+-import java.util.Iterator;
+-import java.util.List;
+-import java.util.Set;
++import java.util.*;
+ import javax.annotation.Nullable;
+ import net.minecraft.crash.CrashReport;
+ import net.minecraft.crash.CrashReportCategory;
+@@ -22,18 +22,26 @@
  import net.minecraft.world.biome.Biome;
  import net.minecraft.world.chunk.Chunk;
  import net.minecraft.world.chunk.IChunkProvider;
@@ -35,14 +41,13 @@
 +    public final Set<Long> droppedChunks = Sets.<Long>newHashSet();
      public final IChunkGenerator chunkGenerator;
      public final IChunkLoader chunkLoader;
--    public final Long2ObjectMap<Chunk> loadedChunks = new Long2ObjectOpenHashMap<>(8192);
-+    public final Long2ObjectMap<Chunk> loadedChunks = new Long2ObjectOpenHashMap<Chunk>(8192);
+     public final Long2ObjectMap<Chunk> loadedChunks = new Long2ObjectOpenHashMap<>(8192);
      public final WorldServer world;
 +    private final Set<Long> loadingChunks = Sets.newHashSet();
  
      public ChunkProviderServer(WorldServer worldObjIn, IChunkLoader chunkLoaderIn, IChunkGenerator chunkGeneratorIn)
      {
-@@ -51,21 +62,23 @@
+@@ -51,21 +59,23 @@
      {
          if (this.world.provider.canDropChunk(chunkIn.x, chunkIn.z))
          {
@@ -69,24 +74,25 @@
      public Chunk getLoadedChunk(int x, int z)
      {
          long i = ChunkPos.asLong(x, z);
-@@ -79,33 +92,80 @@
+@@ -79,33 +89,79 @@
          return chunk;
      }
  
+-    @Nullable
+-    public Chunk loadChunk(int x, int z)
 +    // Is it copy of method above? // no
 +    public Chunk getChunkIfLoaded(int x, int z) {
 +        return loadedChunks.get(ChunkPos.asLong(x, z));
 +    }
 +
-     @Nullable
-     public Chunk loadChunk(int x, int z)
-     {
++    @Nullable
++    public Chunk loadChunk(int x, int z) {
 +        return loadChunk(x, z, null);
 +    }
 +
 +    @Nullable
 +    public Chunk loadChunk(int x, int z, @Nullable Runnable runnable)
-+    {
+     {
          Chunk chunk = this.getLoadedChunk(x, z);
 -
          if (chunk == null)
@@ -159,22 +165,10 @@
              long i = ChunkPos.asLong(x, z);
  
              try
-@@ -117,18 +177,52 @@
+@@ -117,6 +173,38 @@
                  CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Exception generating new chunk");
                  CrashReportCategory crashreportcategory = crashreport.makeCategory("Chunk to be generated");
                  crashreportcategory.addCrashSection("Location", String.format("%d,%d", x, z));
--                crashreportcategory.addCrashSection("Position hash", i);
--                crashreportcategory.addCrashSection("Generator", this.chunkGenerator);
--                throw new ReportedException(crashreport);
--            }
--
--            this.loadedChunks.put(i, chunk);
--            chunk.onLoad();
--            chunk.populate(this, this.chunkGenerator);
--        }
--
--        return chunk;
--    }
 +                crashreportcategory.addCrashSection("Position hash", Long.valueOf(i));
 +                crashreportcategory.addCrashSection("Generator", this.chunkGenerator);
 +                throw new ReportedException(crashreport);
@@ -207,24 +201,25 @@
 +                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Exception generating new chunk");
 +                CrashReportCategory crashreportcategory = crashreport.makeCategory("Chunk to be generated");
 +                crashreportcategory.addCrashSection("Location", String.format("%d,%d", x, z));
-+                crashreportcategory.addCrashSection("Position hash", Long.valueOf(i));
-+                crashreportcategory.addCrashSection("Generator", this.chunkGenerator);
-+                throw new ReportedException(crashreport);
-+            }
-+
-+            this.loadedChunks.put(i, chunk);
-+            chunk.onLoad();
+                 crashreportcategory.addCrashSection("Position hash", i);
+                 crashreportcategory.addCrashSection("Generator", this.chunkGenerator);
+                 throw new ReportedException(crashreport);
+@@ -124,11 +212,13 @@
+ 
+             this.loadedChunks.put(i, chunk);
+             chunk.onLoad();
+-            chunk.populate(this, this.chunkGenerator);
 +            chunk.populateCB(this, this.chunkGenerator, true);
 +            world.timings.syncChunkLoadTimer.stopTiming(); // Spigot
-+        }
-+
-+        return chunk;
-+    }
+         }
+ 
+         return chunk;
+     }
 +    // CatServer end
  
      @Nullable
      private Chunk loadChunkFromFile(int x, int z)
-@@ -147,7 +241,7 @@
+@@ -147,7 +237,7 @@
          }
          catch (Exception exception)
          {
@@ -233,7 +228,21 @@
              return null;
          }
      }
-@@ -186,7 +280,7 @@
+@@ -173,11 +263,11 @@
+         }
+         catch (IOException ioexception)
+         {
+-            LOGGER.error("Couldn't save chunk", (Throwable)ioexception);
++            LOGGER.error("Couldn't save chunk", ioexception);
+         }
+         catch (MinecraftException minecraftexception)
+         {
+-            LOGGER.error("Couldn't save chunk; already in use by another instance of Minecraft?", (Throwable)minecraftexception);
++            LOGGER.error("Couldn't save chunk; already in use by another instance of Minecraft?", minecraftexception);
+         }
+     }
+ 
+@@ -186,7 +276,7 @@
          int i = 0;
          List<Chunk> list = Lists.newArrayList(this.loadedChunks.values());
  
@@ -242,7 +251,7 @@
          {
              Chunk chunk = list.get(j);
  
-@@ -199,8 +293,9 @@
+@@ -199,8 +289,9 @@
              {
                  this.saveChunkData(chunk);
                  chunk.setModified(false);
@@ -253,7 +262,7 @@
                  {
                      return false;
                  }
-@@ -215,30 +310,52 @@
+@@ -215,30 +306,52 @@
          this.chunkLoader.flush();
      }
  
@@ -283,9 +292,8 @@
 +                while (iterator.hasNext()) // Spigot
                  {
                      Long olong = iterator.next();
--                    Chunk chunk = this.loadedChunks.get(olong);
 +                    iterator.remove(); // Spigot
-+                    Chunk chunk = (Chunk)this.loadedChunks.get(olong);
+                     Chunk chunk = this.loadedChunks.get(olong);
  
                      if (chunk != null && chunk.unloadQueued)
                      {
@@ -314,7 +322,7 @@
  
              this.chunkLoader.chunkTick();
          }
-@@ -246,12 +363,44 @@
+@@ -246,44 +359,83 @@
          return false;
      }
  
@@ -360,7 +368,53 @@
      public String makeString()
      {
          return "ServerChunkCache: " + this.loadedChunks.size() + " Drop: " + this.droppedChunks.size();
-@@ -283,7 +432,6 @@
+     }
+ 
+-    public List<Biome.SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos)
+-    {
+-        return this.chunkGenerator.getPossibleCreatures(creatureType, pos);
+-    }
+-
+     @Nullable
+     public BlockPos getNearestStructurePos(World worldIn, String structureName, BlockPos position, boolean findUnexplored)
+     {
+         return this.chunkGenerator.getNearestStructurePos(worldIn, structureName, position, findUnexplored);
+     }
+ 
+-    public boolean isInsideStructure(World worldIn, String structureName, BlockPos pos)
+-    {
+-        return this.chunkGenerator.isInsideStructure(worldIn, structureName, pos);
+-    }
+-
+-    public int getLoadedChunkCount()
+-    {
++    public IChunkGenerator getChunkGenerator() {
++        return chunkGenerator;
++    }
++
++    public void removeChunkFromQueue(int x, int z) {
++        this.droppedChunks.remove(ChunkPos.asLong(x, z));
++    }
++
++    public void addLoadedChunk(Chunk chunk) {
++        this.loadedChunks.put(chunk.chunkKey, chunk);
++    }
++
++    public IChunkLoader getChunkLoader() {
++        return chunkLoader;
++    }
++
++    public int getLoadedChunkCount() {
+         return this.loadedChunks.size();
+     }
+ 
+-    public boolean chunkExists(int x, int z)
+-    {
++    public boolean isUnloading(int x, int z) {
++        return this.droppedChunks.contains(ChunkPos.asLong(x, z));
++    }
++
++    public boolean chunkExists(int x, int z) {
          return this.loadedChunks.containsKey(ChunkPos.asLong(x, z));
      }
  

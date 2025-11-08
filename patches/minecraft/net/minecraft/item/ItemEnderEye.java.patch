@@ -21,3 +21,12 @@
                      {
                          worldIn.setBlockState(blockpos.add(j, 0, k), Blocks.END_PORTAL.getDefaultState(), 2);
                      }
+@@ -111,7 +111,7 @@
+ 
+             if (!worldIn.isRemote)
+             {
+-                BlockPos blockpos = ((WorldServer)worldIn).getChunkProvider().getNearestStructurePos(worldIn, "Stronghold", new BlockPos(playerIn), false);
++                BlockPos blockpos = worldIn.getChunkProvider().getChunkGenerator().getNearestStructurePos(worldIn, "Stronghold", new BlockPos(playerIn), false);
+ 
+                 if (blockpos != null)
+                 {

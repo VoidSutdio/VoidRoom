@@ -21,17 +21,20 @@
  
      public Teleporter(WorldServer worldIn)
      {
-@@ -42,124 +47,174 @@
-             int i = MathHelper.floor(entityIn.posX);
-             int j = MathHelper.floor(entityIn.posY) - 1;
-             int k = MathHelper.floor(entityIn.posZ);
+@@ -39,127 +44,172 @@
+         }
+         else
+         {
+-            int i = MathHelper.floor(entityIn.posX);
+-            int j = MathHelper.floor(entityIn.posY) - 1;
+-            int k = MathHelper.floor(entityIn.posZ);
 -            int l = 1;
 -            int i1 = 0;
 -
 -            for (int j1 = -2; j1 <= 2; j1++)
 +            // CraftBukkit start - Modularize end portal creation
 +            BlockPos created = this.createEndPortal(entityIn.posX, entityIn.posY, entityIn.posZ);
-+            entityIn.setLocationAndAngles((double) created.getX(), (double) created.getY(), (double) created.getZ(), entityIn.rotationYaw, 0.0F);
++            entityIn.setLocationAndAngles(created.getX(), created.getY(), created.getZ(), entityIn.rotationYaw, 0.0F);
 +            entityIn.motionX = entityIn.motionY = entityIn.motionZ = 0.0D;
 +        }
 +    }
@@ -42,8 +45,6 @@
 +        int j = MathHelper.floor(y) - 1;
 +        int k = MathHelper.floor(z);
 +        // CraftBukkit end
-+        int l = 1;
-+        int i1 = 0;
 +
 +        for (int j1 = -2; j1 <= 2; ++j1)
 +        {
@@ -272,7 +273,7 @@
              }
  
              float f = 0.0F;
-@@ -188,38 +243,55 @@
+@@ -188,38 +238,55 @@
                  f3 = 1.0F;
              }
  
@@ -329,6 +330,11 @@
  
      public boolean makePortal(Entity entityIn)
      {
+-        int i = 16;
+-        double d0 = -1.0;
+-        int j = MathHelper.floor(entityIn.posX);
+-        int k = MathHelper.floor(entityIn.posY);
+-        int l = MathHelper.floor(entityIn.posZ);
 +        // CraftBukkit start - Allow for portal creation to be based on coordinates instead of entity
 +        return this.createPortal(entityIn.posX, entityIn.posY, entityIn.posZ, 16);
 +    }
@@ -339,11 +345,7 @@
 +            return true;
 +        }
 +        // CraftBukkit end
-         int i = 16;
--        double d0 = -1.0;
--        int j = MathHelper.floor(entityIn.posX);
--        int k = MathHelper.floor(entityIn.posY);
--        int l = MathHelper.floor(entityIn.posZ);
++
 +        double d0 = -1.0D;
 +        int j = MathHelper.floor(x);
 +        int k = MathHelper.floor(y);
@@ -351,7 +353,7 @@
          int i1 = j;
          int j1 = k;
          int k1 = l;
-@@ -227,25 +299,25 @@
+@@ -227,25 +294,25 @@
          int i2 = this.random.nextInt(4);
          BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos();
  
@@ -385,7 +387,7 @@
                          {
                              int l3 = k3 % 2;
                              int i4 = 1 - l3;
-@@ -256,30 +328,29 @@
+@@ -256,30 +323,29 @@
                                  i4 = -i4;
                              }
  
@@ -423,7 +425,7 @@
                              {
                                  d0 = d7;
                                  i1 = j2;
-@@ -293,52 +364,51 @@
+@@ -293,52 +359,51 @@
              }
          }
  
@@ -491,7 +493,7 @@
                                  {
                                      d0 = d8;
                                      i1 = l5;
-@@ -365,37 +435,34 @@
+@@ -365,37 +430,34 @@
              i3 = -i3;
          }
  
@@ -538,7 +540,7 @@
                  {
                      int l10 = i6 + (l8 - 1) * l6;
                      int l11 = k2 + l9;
-@@ -405,9 +472,9 @@
+@@ -405,9 +467,9 @@
                  }
              }
  
@@ -550,7 +552,7 @@
                  {
                      int i11 = i6 + (i9 - 1) * l6;
                      int i12 = k2 + i10;
-@@ -430,7 +497,7 @@
+@@ -430,7 +492,7 @@
  
              while (objectiterator.hasNext())
              {
@@ -559,7 +561,7 @@
  
                  if (teleporter$portalposition == null || teleporter$portalposition.lastUpdateTime < i)
                  {
-@@ -449,5 +516,14 @@
+@@ -449,5 +511,14 @@
              super(pos.getX(), pos.getY(), pos.getZ());
              this.lastUpdateTime = lastUpdate;
          }

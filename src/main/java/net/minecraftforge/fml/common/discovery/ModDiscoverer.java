@@ -81,7 +81,7 @@ public class ModDiscoverer
             FMLLog.log.debug("Adding path {} and {} as developing mod", devPaths.get(i), devPaths.get(i + 1));
 
             addCandidate(new ModCandidate(devPaths.get(i), devPaths.get(i), ContainerType.DIR, false, true));
-            // funkyra's comment: idk what kappa was trying to do here, but it doesn't work
+            // funkyra comment: idk what kappa was trying to do here, but it doesn't work
             //addCandidate(new ModCandidate(devPaths.get(i), devPaths.get(i + 1)));
         }
     }

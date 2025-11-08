@@ -667,11 +667,11 @@
 +	{
 +		if (loadChunk)
 +		{
-+			this.clientChunkProvider.loadChunk(chunkX, chunkZ);
++            ((ChunkProviderClient) this.clientChunkProvider).loadChunk(chunkX, chunkZ);
 +		}
 +		else
 +		{
-+			this.clientChunkProvider.unloadChunk(chunkX, chunkZ);
++			((ChunkProviderClient) this.clientChunkProvider).unloadChunk(chunkX, chunkZ);
 +			this.markBlockRangeForRenderUpdate(chunkX * 16, 0, chunkZ * 16, chunkX * 16 + 15, 256, chunkZ * 16 + 15);
 +		}
 +	}

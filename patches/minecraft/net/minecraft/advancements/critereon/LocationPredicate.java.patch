@@ -1,12 +1,14 @@
 --- before/net/minecraft/advancements/critereon/LocationPredicate.java
 +++ after/net/minecraft/advancements/critereon/LocationPredicate.java
-@@ -69,9 +69,15 @@
+@@ -68,10 +68,16 @@
+         }
          else
          {
-             BlockPos blockpos = new BlockPos((double)x, (double)y, (double)z);
+-            BlockPos blockpos = new BlockPos((double)x, (double)y, (double)z);
 -            return this.biome != null && this.biome != world.getBiome(blockpos)
 -                   ? false
 -                   : this.feature == null || world.getChunkProvider().isInsideStructure(world, this.feature, blockpos);
++            BlockPos blockpos = new BlockPos(x, y, z);
 +
 +            if (this.biome != null && this.biome != world.getBiome(blockpos))
 +            {
@@ -14,7 +16,7 @@
 +            }
 +            else
 +            {
-+                return this.feature == null || world.getChunkProvider().isInsideStructure(world, this.feature, blockpos);
++                return this.feature == null || world.getChunkProvider().getChunkGenerator().isInsideStructure(world, this.feature, blockpos);
 +            }
          }
      }

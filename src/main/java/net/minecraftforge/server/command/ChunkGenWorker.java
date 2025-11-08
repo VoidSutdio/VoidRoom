@@ -118,7 +118,7 @@ public class ChunkGenWorker implements IWorker
             }
         }
 
-        AnvilChunkLoader loader = world.getChunkProvider().chunkLoader instanceof AnvilChunkLoader ? (AnvilChunkLoader)world.getChunkProvider().chunkLoader : null;
+        AnvilChunkLoader loader = world.getChunkProvider().getChunkLoader() instanceof AnvilChunkLoader ? (AnvilChunkLoader) world.getChunkProvider().getChunkLoader() : null;
         if (loader != null && loader.getPendingSaveCount() > 100)
         {
 
@@ -166,7 +166,7 @@ public class ChunkGenWorker implements IWorker
                 };
                 try
                 {
-                    world.getChunkProvider().chunkLoader.saveChunk(world, target);
+                    world.getChunkProvider().getChunkLoader().saveChunk(world, target);
                 }
                 catch (IOException | MinecraftException e)
                 {
