@@ -33,6 +33,7 @@ import java.net.URL;
 import java.security.cert.Certificate;
 import java.util.*;
 
+import net.minecraft.world.storage.ISaveHandler;
 import net.minecraftforge.client.GuiIngameForge;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -631,7 +632,7 @@ public class ForgeModContainer extends DummyModContainer implements WorldAccessC
     }
 
     @Override
-    public NBTTagCompound getDataForWriting(SaveHandler handler, WorldInfo info)
+    public NBTTagCompound getDataForWriting(ISaveHandler handler, WorldInfo info)
     {
         NBTTagCompound forgeData = new NBTTagCompound();
         NBTTagCompound dimData = DimensionManager.saveDimensionDataMap();
@@ -641,7 +642,7 @@ public class ForgeModContainer extends DummyModContainer implements WorldAccessC
     }
 
     @Override
-    public void readData(SaveHandler handler, WorldInfo info, Map<String, NBTBase> propertyMap, NBTTagCompound tag)
+    public void readData(ISaveHandler handler, WorldInfo info, Map<String, NBTBase> propertyMap, NBTTagCompound tag)
     {
         DimensionManager.loadDimensionDataMap(tag.hasKey("DimensionData") ? tag.getCompoundTag("DimensionData") : null);
         FluidRegistry.loadFluidDefaults(tag);

@@ -5,7 +5,7 @@ import catserver.server.threads.AsyncTaskThread;
 import catserver.server.threads.RealtimeThread;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.storage.SaveHandler;
+import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +27,7 @@ public class CatServer {
     }
 
     public static void onServerStart() {
-        RealtimeThread.INSTANCE.start();
+        // RealtimeThread.INSTANCE.start();
         // new VersionCheck(); // CatRoom
     }
 
@@ -36,12 +36,12 @@ public class CatServer {
         AsyncChatThread.shutdown();
     }
 
-    public static void onWorldDataLoad(SaveHandler handler, WorldInfo worldInfo, NBTTagCompound tagCompound) {
+    public static void onWorldDataLoad(ISaveHandler handler, WorldInfo worldInfo, NBTTagCompound tagCompound) {
         NBTTagCompound catserverData = tagCompound.getCompoundTag("catserver");
         BukkitWorldDimensionManager.load(catserverData);
     }
 
-    public static void onWorldDataSave(SaveHandler handler, WorldInfo worldInfo, NBTTagCompound tagCompound) {
+    public static void onWorldDataSave(ISaveHandler handler, WorldInfo worldInfo, NBTTagCompound tagCompound) {
         NBTTagCompound catserverData = new NBTTagCompound();
         BukkitWorldDimensionManager.save(catserverData);
         tagCompound.setTag("catserver", catserverData);
@@ -64,6 +64,6 @@ public class CatServer {
     }
 
     public static int getCurrentTick() {
-        return getConfig().enableRealtime ? RealtimeThread.currentTick : MinecraftServer.currentTick;
+        return getConfig().enableRealtime ? (int) MinecraftServer.realTimeTicks : MinecraftServer.currentTick;
     }
 }

@@ -33,6 +33,7 @@ import com.google.common.collect.Maps;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
+import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.fml.common.FMLLog;
 
@@ -61,7 +62,7 @@ public class ChunkIOExecutor
     );
 
     //Load the chunk completely in this thread. Dequeue as needed...
-    public static Chunk syncChunkLoad(World world, AnvilChunkLoader loader, ChunkProviderServer provider, int x, int z)
+    public static Chunk syncChunkLoad(World world, IChunkLoader loader, ChunkProviderServer provider, int x, int z)
     {
         if (CatAsyncCatcher.checkAsync("load chunk")) return CatAsyncCatcher.asyncLoadChunkCaught(world, loader, provider, x, z); // CatServer
         QueuedChunk key = new QueuedChunk(x, z, world);
@@ -101,7 +102,7 @@ public class ChunkIOExecutor
     }
 
     //Queue the chunk to be loaded, and call the runnable when finished
-    public static void queueChunkLoad(World world, AnvilChunkLoader loader, ChunkProviderServer provider, int x, int z, Runnable runnable)
+    public static void queueChunkLoad(World world, IChunkLoader loader, ChunkProviderServer provider, int x, int z, Runnable runnable)
     {
         QueuedChunk key = new QueuedChunk(x, z, world);
         ChunkIOProvider task = tasks.get(key);

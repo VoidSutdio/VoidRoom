@@ -21,6 +21,7 @@ package net.minecraftforge.common.chunkio;
 
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
+import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.ChunkPos;
@@ -33,7 +34,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 class ChunkIOProvider implements Runnable
 {
     private final QueuedChunk chunkInfo;
-    private final AnvilChunkLoader loader;
+    private final IChunkLoader loader;
     private final ChunkProviderServer provider;
 
     private Chunk chunk;
@@ -41,7 +42,7 @@ class ChunkIOProvider implements Runnable
     private final ConcurrentLinkedQueue<Runnable> callbacks = new ConcurrentLinkedQueue<Runnable>();
     private boolean ran = false;
 
-    ChunkIOProvider(QueuedChunk chunk, AnvilChunkLoader loader, ChunkProviderServer provider)
+    ChunkIOProvider(QueuedChunk chunk, IChunkLoader loader, ChunkProviderServer provider)
     {
         this.chunkInfo = chunk;
         this.loader = loader;
@@ -64,7 +65,7 @@ class ChunkIOProvider implements Runnable
         {
             try
             {
-                Object[] data = null;
+                Object[] data;
                 try
                 {
                     data = this.loader.loadChunk__Async(chunkInfo.world, chunkInfo.x, chunkInfo.z);
@@ -105,7 +106,7 @@ class ChunkIOProvider implements Runnable
         this.chunk.setLastSaveTime(provider.world.getTotalWorldTime());
         this.provider.chunkGenerator.recreateStructures(this.chunk, this.chunkInfo.x, this.chunkInfo.z);
 
-        provider.loadedChunks.put(ChunkPos.asLong(this.chunkInfo.x, this.chunkInfo.z), this.chunk);
+        this.provider.putLoadedChunk(this.chunkInfo.x, this.chunkInfo.z, this.chunk);
         this.chunk.onLoad();
         this.chunk.populateCB(provider, provider.chunkGenerator, false);
 

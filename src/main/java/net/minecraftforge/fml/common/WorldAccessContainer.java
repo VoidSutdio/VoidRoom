@@ -38,7 +38,7 @@ public interface WorldAccessContainer
      * @param info    worldinfo
      * @return An NBTTagCompound containing the datas
      */
-    NBTTagCompound getDataForWriting(SaveHandler handler, WorldInfo info);
+    NBTTagCompound getDataForWriting(ISaveHandler handler, WorldInfo info);
 
     /**
      * consume and restores world state from NBT data.
@@ -48,5 +48,5 @@ public interface WorldAccessContainer
      * @param propertyMap Additional properties map for world data, see {@link WorldInfo#setAdditionalProperties}
      * @param tag         The NBTTagCompound containing saved world data
      */
-    void readData(SaveHandler handler, WorldInfo info, Map<String, NBTBase> propertyMap, NBTTagCompound tag);
+    void readData(ISaveHandler handler, WorldInfo info, Map<String, NBTBase> propertyMap, NBTTagCompound tag);
 }

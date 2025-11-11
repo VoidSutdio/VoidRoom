@@ -40,6 +40,8 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
     public CustomChunkGenerator(World world, long seed, ChunkGenerator generator) {
         this.world = (WorldServer) world;
         this.generator = generator;
+        System.out.println("PIZDAAAAAAWDAWDW " + this.generator);
+        System.out.println("PIZDAAAAAAXXXXXX " + generator);
 
         this.random = new Random(seed);
     }

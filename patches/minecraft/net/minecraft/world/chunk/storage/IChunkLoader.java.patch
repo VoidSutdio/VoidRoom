@@ -1,9 +1,31 @@
 --- before/net/minecraft/world/chunk/storage/IChunkLoader.java
 +++ after/net/minecraft/world/chunk/storage/IChunkLoader.java
-@@ -20,4 +20,10 @@
+@@ -2,12 +2,13 @@
+ 
+ import java.io.IOException;
+ import javax.annotation.Nullable;
++
++import net.minecraft.nbt.NBTTagCompound;
+ import net.minecraft.world.MinecraftException;
+ import net.minecraft.world.World;
+ import net.minecraft.world.chunk.Chunk;
+ 
+-public interface IChunkLoader
+-{
++public interface IChunkLoader {
+     @Nullable
+     Chunk loadChunk(World worldIn, int x, int z) throws IOException;
+ 
+@@ -20,4 +21,16 @@
      void flush();
  
      boolean isChunkGeneratedAt(int x, int z);
++
++    // VoidStudio start - capability
++    void loadEntities(World worldIn, NBTTagCompound compound, Chunk chunk);
++
++    Object[] loadChunk__Async(World worldIn, int x, int z) throws IOException;
++    // VoidStudio end
 +
 +    // CatServer start - Add spigot method
 +    default void saveChunk(World world, Chunk chunk, boolean unloaded) throws MinecraftException, IOException {

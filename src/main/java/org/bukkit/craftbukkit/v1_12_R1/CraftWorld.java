@@ -276,7 +276,7 @@ public class CraftWorld implements World {
     }
 
     public Chunk[] getLoadedChunks() {
-        Object[] chunks = world.getChunkProvider().loadedChunks.values().toArray();
+        Object[] chunks = world.getChunkProvider().getLoadedChunks().toArray();
         Chunk[] craftChunks = new CraftChunk[chunks.length];
 
         for (int i = 0; i < chunks.length; i++) {
@@ -345,22 +345,21 @@ public class CraftWorld implements World {
             return false;
         }
 
-        final long chunkKey = ChunkPos.asLong(x, z);
-        world.getChunkProvider().droppedChunks.remove(chunkKey);
+        this.world.getChunkProvider().cancelUnload(x, z);
 
         net.minecraft.world.chunk.Chunk chunk = null;
 
-        chunk = world.getChunkProvider().chunkGenerator.generateChunk(x, z);
+        chunk = this.world.getChunkProvider().chunkGenerator.generateChunk(x, z);
         PlayerChunkMapEntry playerChunk = world.getPlayerChunkMap().getEntry(x, z);
         if (playerChunk != null) {
             playerChunk.chunk = chunk;
         }
 
         if (chunk != null) {
-            world.getChunkProvider().loadedChunks.put(chunkKey, chunk);
+            this.world.getChunkProvider().putLoadedChunk(chunk.x, chunk.z, chunk);
 
             chunk.onLoad();
-            chunk.populateCB(world.getChunkProvider(), world.getChunkProvider().chunkGenerator, true);
+            chunk.populateCB(this.world.getChunkProvider(), this.world.getChunkProvider().chunkGenerator, true);
 
             refreshChunk(x, z);
         }
@@ -1683,15 +1682,15 @@ public class CraftWorld implements World {
             return;
         }
 
-        ChunkProviderServer cps = world.getChunkProvider();
-        for (net.minecraft.world.chunk.Chunk chunk : cps.loadedChunks.values()) {
+        ChunkProviderServer cps = this.world.getChunkProvider();
+        for (net.minecraft.world.chunk.Chunk chunk : cps.getLoadedChunks()) {
             // If in use, skip it
-            if (isChunkInUse(chunk.x, chunk.z)) {
+            if (this.isChunkInUse(chunk.x, chunk.z)) {
                 continue;
             }
 
             // Already unloading?
-            if (cps.droppedChunks.contains(ChunkPos.asLong(chunk.x, chunk.z))) {
+            if (cps.isChunkUnloading(chunk.x, chunk.z)) {
                 if (!chunk.unloadQueued) chunk.unloadQueued = true; // CatServer
                 continue;
             }

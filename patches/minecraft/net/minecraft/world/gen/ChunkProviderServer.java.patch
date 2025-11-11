@@ -1,6 +1,6 @@
 --- before/net/minecraft/world/gen/ChunkProviderServer.java
 +++ after/net/minecraft/world/gen/ChunkProviderServer.java
-@@ -1,9 +1,12 @@
+@@ -1,14 +1,14 @@
  package net.minecraft.world.gen;
  
 +import catserver.server.CatAsyncCatcher;
@@ -11,9 +11,15 @@
  import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 +import it.unimi.dsi.fastutil.objects.ObjectIterator;
  import java.io.IOException;
- import java.util.Collection;
- import java.util.Iterator;
-@@ -22,18 +25,26 @@
+-import java.util.Collection;
+-import java.util.Iterator;
+-import java.util.List;
+-import java.util.Set;
++import java.util.*;
+ import javax.annotation.Nullable;
+ import net.minecraft.crash.CrashReport;
+ import net.minecraft.crash.CrashReportCategory;
+@@ -22,50 +22,80 @@
  import net.minecraft.world.biome.Biome;
  import net.minecraft.world.chunk.Chunk;
  import net.minecraft.world.chunk.IChunkProvider;
@@ -27,22 +33,58 @@
  import org.apache.logging.log4j.Logger;
 +import org.bukkit.event.world.ChunkUnloadEvent;
  
+-public class ChunkProviderServer implements IChunkProvider
+-{
 +// TODO: This class needs serious testing.
- public class ChunkProviderServer implements IChunkProvider
- {
++public class ChunkProviderServer implements IChunkProvider {
      private static final Logger LOGGER = LogManager.getLogger();
 -    private final Set<Long> droppedChunks = Sets.newHashSet();
-+    public final Set<Long> droppedChunks = Sets.<Long>newHashSet();
++    private final Set<Long> droppedChunks;
++    private final Set<Long> loadingChunks;
++    private final Long2ObjectMap<Chunk> loadedChunks;
      public final IChunkGenerator chunkGenerator;
      public final IChunkLoader chunkLoader;
 -    public final Long2ObjectMap<Chunk> loadedChunks = new Long2ObjectOpenHashMap<>(8192);
-+    public final Long2ObjectMap<Chunk> loadedChunks = new Long2ObjectOpenHashMap<Chunk>(8192);
      public final WorldServer world;
-+    private final Set<Long> loadingChunks = Sets.newHashSet();
  
-     public ChunkProviderServer(WorldServer worldObjIn, IChunkLoader chunkLoaderIn, IChunkGenerator chunkGeneratorIn)
-     {
-@@ -51,21 +62,23 @@
+-    public ChunkProviderServer(WorldServer worldObjIn, IChunkLoader chunkLoaderIn, IChunkGenerator chunkGeneratorIn)
+-    {
++    public ChunkProviderServer(WorldServer worldObjIn, IChunkLoader chunkLoaderIn, IChunkGenerator chunkGeneratorIn) {
+         this.world = worldObjIn;
+         this.chunkLoader = chunkLoaderIn;
+         this.chunkGenerator = chunkGeneratorIn;
++
++        int dim = this.world.dimension;
++        if (dim > -1000 && dim < 1000) {
++            this.loadedChunks = new Long2ObjectOpenHashMap<>(8192);
++            this.loadingChunks = new HashSet<>();
++            this.droppedChunks = new HashSet<>();
++        } else {
++            this.loadedChunks = null;
++            this.loadingChunks = null;
++            this.droppedChunks = null;
++        }
+     }
+ 
+-    public Collection<Chunk> getLoadedChunks()
+-    {
++    public Collection<Chunk> getLoadedChunks() {
+         return this.loadedChunks.values();
+     }
+ 
++    public boolean isChunkUnloading(int x, int z) {
++        return !this.droppedChunks.contains(ChunkPos.asLong(x, z));
++    }
++
++    public void cancelUnload(int x, int z) {
++        this.droppedChunks.remove(ChunkPos.asLong(x, z));
++    }
++
++    public void putLoadedChunk(int x, int z, Chunk chunk) {
++        this.loadedChunks.put(ChunkPos.asLong(x, z), chunk);
++    }
++
+     public void queueUnload(Chunk chunkIn)
      {
          if (this.world.provider.canDropChunk(chunkIn.x, chunkIn.z))
          {
@@ -69,7 +111,7 @@
      public Chunk getLoadedChunk(int x, int z)
      {
          long i = ChunkPos.asLong(x, z);
-@@ -79,33 +92,80 @@
+@@ -79,33 +109,77 @@
          return chunk;
      }
  
@@ -81,7 +123,7 @@
      @Nullable
      public Chunk loadChunk(int x, int z)
      {
-+        return loadChunk(x, z, null);
++        return this.loadChunk(x, z, null);
 +    }
 +
 +    @Nullable
@@ -121,7 +163,7 @@
 +            }
 +            else
 +            {
-+                AnvilChunkLoader loader = (AnvilChunkLoader) this.chunkLoader;
++                IChunkLoader loader = this.chunkLoader;
 +                if (runnable == null || !ForgeChunkManager.asyncChunkLoading)
 +                    chunk = ChunkIOExecutor.syncChunkLoad(this.world, loader, this, x, z);
 +                else if (loader.isChunkGeneratedAt(x, z))
@@ -139,6 +181,8 @@
      }
  
 -    @Override
+-    public Chunk provideChunk(int x, int z)
+-    {
 +    // CREF start - FAWE using this method, but
 +    public Chunk getChunkAt(int i, int j, Runnable runnable) {
 +        return provideChunk(i, j, runnable);
@@ -149,41 +193,25 @@
 +    }
 +    // CREF end
 +
-     public Chunk provideChunk(int x, int z)
-     {
++    public Chunk provideChunk(int x, int z) {
          Chunk chunk = this.loadChunk(x, z);
  
-         if (chunk == null)
-         {
-+            world.timings.syncChunkLoadTimer.startTiming(); // Spigot
+-        if (chunk == null)
+-        {
++        if (chunk == null) {
              long i = ChunkPos.asLong(x, z);
  
              try
-@@ -117,18 +177,52 @@
-                 CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Exception generating new chunk");
-                 CrashReportCategory crashreportcategory = crashreport.makeCategory("Chunk to be generated");
-                 crashreportcategory.addCrashSection("Location", String.format("%d,%d", x, z));
--                crashreportcategory.addCrashSection("Position hash", i);
--                crashreportcategory.addCrashSection("Generator", this.chunkGenerator);
--                throw new ReportedException(crashreport);
--            }
--
--            this.loadedChunks.put(i, chunk);
--            chunk.onLoad();
+@@ -124,11 +198,42 @@
+ 
+             this.loadedChunks.put(i, chunk);
+             chunk.onLoad();
 -            chunk.populate(this, this.chunkGenerator);
 -        }
 -
 -        return chunk;
 -    }
-+                crashreportcategory.addCrashSection("Position hash", Long.valueOf(i));
-+                crashreportcategory.addCrashSection("Generator", this.chunkGenerator);
-+                throw new ReportedException(crashreport);
-+            }
-+
-+            this.loadedChunks.put(i, chunk);
-+            chunk.onLoad();
 +            chunk.populateCB(this, this.chunkGenerator, true);
-+            world.timings.syncChunkLoadTimer.stopTiming(); // Spigot
 +        }
 +
 +        return chunk;
@@ -198,7 +226,6 @@
 +        Chunk chunk = this.loadChunk(x, z, runnable);
 +
 +        if (chunk == null && generate) {
-+            world.timings.syncChunkLoadTimer.startTiming(); // Spigot
 +            long i = ChunkPos.asLong(x, z);
 +
 +            try {
@@ -215,7 +242,6 @@
 +            this.loadedChunks.put(i, chunk);
 +            chunk.onLoad();
 +            chunk.populateCB(this, this.chunkGenerator, true);
-+            world.timings.syncChunkLoadTimer.stopTiming(); // Spigot
 +        }
 +
 +        return chunk;
@@ -224,7 +250,7 @@
  
      @Nullable
      private Chunk loadChunkFromFile(int x, int z)
-@@ -147,7 +241,7 @@
+@@ -147,7 +252,7 @@
          }
          catch (Exception exception)
          {
@@ -233,7 +259,7 @@
              return null;
          }
      }
-@@ -186,7 +280,7 @@
+@@ -186,7 +291,7 @@
          int i = 0;
          List<Chunk> list = Lists.newArrayList(this.loadedChunks.values());
  
@@ -242,7 +268,7 @@
          {
              Chunk chunk = list.get(j);
  
-@@ -199,8 +293,9 @@
+@@ -199,8 +304,9 @@
              {
                  this.saveChunkData(chunk);
                  chunk.setModified(false);
@@ -253,7 +279,7 @@
                  {
                      return false;
                  }
-@@ -215,30 +310,52 @@
+@@ -215,30 +321,52 @@
          this.chunkLoader.flush();
      }
  
@@ -314,10 +340,12 @@
  
              this.chunkLoader.chunkTick();
          }
-@@ -246,12 +363,44 @@
+@@ -246,19 +374,48 @@
          return false;
      }
  
+-    public boolean canSave()
+-    {
 +    public boolean unloadChunk(Chunk chunk, boolean save) {
 +        ChunkUnloadEvent event = new ChunkUnloadEvent(chunk.bukkitChunk, save);
 +        this.world.getServer().getPluginManager().callEvent(event);
@@ -351,20 +379,49 @@
 +        return true;
 +    }
 +
-     public boolean canSave()
-     {
++    public boolean canSave() {
          return !this.world.disableLevelSaving;
      }
  
 -    @Override
-     public String makeString()
-     {
+-    public String makeString()
+-    {
++    public String makeString() {
          return "ServerChunkCache: " + this.loadedChunks.size() + " Drop: " + this.droppedChunks.size();
-@@ -283,7 +432,6 @@
+     }
+ 
+-    public List<Biome.SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos)
+-    {
++    public List<Biome.SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos) {
+         return this.chunkGenerator.getPossibleCreatures(creatureType, pos);
+     }
+ 
+@@ -268,24 +425,19 @@
+         return this.chunkGenerator.getNearestStructurePos(worldIn, structureName, position, findUnexplored);
+     }
+ 
+-    public boolean isInsideStructure(World worldIn, String structureName, BlockPos pos)
+-    {
++    public boolean isInsideStructure(World worldIn, String structureName, BlockPos pos) {
+         return this.chunkGenerator.isInsideStructure(worldIn, structureName, pos);
+     }
+ 
+-    public int getLoadedChunkCount()
+-    {
++    public int getLoadedChunkCount() {
+         return this.loadedChunks.size();
+     }
+ 
+-    public boolean chunkExists(int x, int z)
+-    {
++    public boolean chunkExists(int x, int z) {
          return this.loadedChunks.containsKey(ChunkPos.asLong(x, z));
      }
  
 -    @Override
-     public boolean isChunkGeneratedAt(int x, int z)
-     {
+-    public boolean isChunkGeneratedAt(int x, int z)
+-    {
++    public boolean isChunkGeneratedAt(int x, int z) {
          return this.loadedChunks.containsKey(ChunkPos.asLong(x, z)) || this.chunkLoader.isChunkGeneratedAt(x, z);
+     }
+ }

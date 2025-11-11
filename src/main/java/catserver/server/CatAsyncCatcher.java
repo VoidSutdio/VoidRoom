@@ -4,6 +4,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
+import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.chunkio.ChunkIOExecutor;
@@ -70,9 +71,9 @@ public class CatAsyncCatcher {
         return false;
     }
 
-    public static Chunk asyncLoadChunkCaught(World world, AnvilChunkLoader loader, ChunkProviderServer provider, int x, int z) {
+    public static Chunk asyncLoadChunkCaught(World world, IChunkLoader loader, ChunkProviderServer provider, int x, int z) {
         if (ForgeChunkManager.asyncChunkLoading) {
-            Waitable<Chunk> waitable = new Waitable<Chunk>() {
+            Waitable<Chunk> waitable = new Waitable<>() {
                 @Override
                 protected Chunk evaluate() {
                     return provider.getChunkIfLoaded(x, z);

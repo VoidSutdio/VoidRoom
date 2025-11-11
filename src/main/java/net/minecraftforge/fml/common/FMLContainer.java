@@ -27,6 +27,7 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.SaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.fml.client.FMLFileResourcePack;
@@ -106,7 +107,7 @@ public final class FMLContainer extends DummyModContainer implements WorldAccess
         return Loader.instance().checkRemoteModList(modList,side);
     }
     @Override
-    public NBTTagCompound getDataForWriting(SaveHandler handler, WorldInfo info)
+    public NBTTagCompound getDataForWriting(ISaveHandler handler, WorldInfo info)
     {
         NBTTagCompound fmlData = new NBTTagCompound();
         NBTTagList modList = new NBTTagList();
@@ -131,7 +132,7 @@ public final class FMLContainer extends DummyModContainer implements WorldAccess
     }
 
     @Override
-    public void readData(SaveHandler handler, WorldInfo info, Map<String, NBTBase> propertyMap, NBTTagCompound tag)
+    public void readData(ISaveHandler handler, WorldInfo info, Map<String, NBTBase> propertyMap, NBTTagCompound tag)
     {
         if (tag.hasKey("ModList"))
         {
