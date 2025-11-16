@@ -52,7 +52,7 @@
  import net.minecraft.village.VillageCollection;
  import net.minecraft.village.VillageSiege;
  import net.minecraft.world.biome.Biome;
-@@ -76,16 +75,19 @@
+@@ -76,58 +75,118 @@
  import net.minecraft.world.storage.WorldInfo;
  import net.minecraft.world.storage.WorldSavedDataCallableSave;
  import net.minecraft.world.storage.loot.LootTableManager;
@@ -69,13 +69,19 @@
      private static final Logger LOGGER = LogManager.getLogger();
      private final MinecraftServer server;
 -    private final EntityTracker entityTracker;
+-    private final PlayerChunkMap playerChunkMap;
 +    public EntityTracker entityTracker;
-     private final PlayerChunkMap playerChunkMap;
++    protected final PlayerChunkMap playerChunkMap;
      private final Set<NextTickListEntry> pendingTickListEntriesHashSet = Sets.newHashSet();
      private final TreeSet<NextTickListEntry> pendingTickListEntriesTreeSet = new TreeSet<>();
-@@ -96,38 +98,95 @@
-     private final Teleporter worldTeleporter;
-     private final WorldEntitySpawner entitySpawner = new WorldEntitySpawner();
+     private final Map<UUID, Entity> entitiesByUuid = Maps.newHashMap();
+     public boolean disableLevelSaving;
+     private boolean allPlayersSleeping;
+     private int updateEntityTick;
+-    private final Teleporter worldTeleporter;
+-    private final WorldEntitySpawner entitySpawner = new WorldEntitySpawner();
++    protected final Teleporter worldTeleporter;
++    protected final WorldEntitySpawner entitySpawner = new WorldEntitySpawner();
      protected final VillageSiege villageSiege = new VillageSiege(this);
 -    private final WorldServer.ServerBlockEventList[] blockEventQueue = new WorldServer.ServerBlockEventList[]
 -    {
@@ -91,7 +97,7 @@
 +
 +    public final int dimension;
 +
-+    private int lastTick = 0; // CatServer - implement realtime
++    protected int lastTick = 0; // CatServer - implement realtime
 +
 +    public WorldServer(MinecraftServer server, ISaveHandler saveHandlerIn, WorldInfo info, int dimensionId, Profiler methodprofiler, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen) {
 +        super(saveHandlerIn, info, net.minecraftforge.common.DimensionManager.createProviderFor(dimensionId), methodprofiler, false, gen, env);
@@ -1113,6 +1119,15 @@
      public void addBlockEvent(BlockPos pos, Block blockIn, int eventID, int eventParam)
      {
          BlockEventData blockeventdata = new BlockEventData(pos, blockIn, eventID, eventParam);
+@@ -1227,7 +1445,7 @@
+         this.blockEventQueue[this.blockEventCacheIndex].add(blockeventdata);
+     }
+ 
+-    private void sendQueuedBlockEvents()
++    protected void sendQueuedBlockEvents()
+     {
+         while (!this.blockEventQueue[this.blockEventCacheIndex].isEmpty())
+         {
 @@ -1238,19 +1456,8 @@
              {
                  if (this.fireBlockEvent(blockeventdata))

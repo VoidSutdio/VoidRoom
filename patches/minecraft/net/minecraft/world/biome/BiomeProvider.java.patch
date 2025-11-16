@@ -1,15 +1,21 @@
 --- before/net/minecraft/world/biome/BiomeProvider.java
 +++ after/net/minecraft/world/biome/BiomeProvider.java
-@@ -20,13 +20,14 @@
-     private ChunkGeneratorSettings settings;
-     private GenLayer genBiomes;
-     private GenLayer biomeIndexLayer;
+@@ -17,16 +17,17 @@
+ 
+ public class BiomeProvider
+ {
+-    private ChunkGeneratorSettings settings;
+-    private GenLayer genBiomes;
+-    private GenLayer biomeIndexLayer;
 -    private final BiomeCache biomeCache = new BiomeCache(this);
 -    private final List<Biome> biomesToSpawnIn = Lists.newArrayList(
 -                Biomes.FOREST, Biomes.PLAINS, Biomes.TAIGA, Biomes.TAIGA_HILLS, Biomes.FOREST_HILLS, Biomes.JUNGLE, Biomes.JUNGLE_HILLS
 -            );
-+    private final BiomeCache biomeCache;
-+    private final List<Biome> biomesToSpawnIn;
++    protected ChunkGeneratorSettings settings;
++    protected GenLayer genBiomes;
++    public GenLayer biomeIndexLayer;
++    protected final BiomeCache biomeCache;
++    protected final List<Biome> biomesToSpawnIn;
 +    public static List<Biome> allowedBiomes = Lists.newArrayList(Biomes.FOREST, Biomes.PLAINS, Biomes.TAIGA, Biomes.TAIGA_HILLS, Biomes.FOREST_HILLS, Biomes.JUNGLE, Biomes.JUNGLE_HILLS);
  
      protected BiomeProvider()

@@ -975,7 +975,7 @@
 +
 +	public void setWorldScoreboard(Scoreboard scoreboardIn)
 +	{
-+		this.worldScoreboard = scoreboardIn;
++		this.worldScoreboard = null;
 +	}
 +
 +	public void setWorldTime(long time)
