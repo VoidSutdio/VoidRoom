@@ -1,6 +1,6 @@
 --- before/net/minecraft/advancements/FunctionManager.java
 +++ after/net/minecraft/advancements/FunctionManager.java
-@@ -29,24 +29,23 @@
+@@ -29,29 +29,27 @@
      private FunctionObject gameLoopFunction;
      private final ArrayDeque<FunctionManager.QueuedCommand> commandQueue = new ArrayDeque<>();
      private boolean isExecuting = false;
@@ -10,7 +10,6 @@
 +    private final ICommandSender gameLoopFunctionSender = new CustomFunctionListener();
 +
 +    public class CustomFunctionListener implements ICommandSender {
-+
 +        public org.bukkit.command.CommandSender sender = new org.bukkit.craftbukkit.v1_12_R1.command.CraftFunctionCommandSender(this);
          public String getName()
          {
@@ -30,7 +29,13 @@
          public MinecraftServer getServer()
          {
              return FunctionManager.this.server;
-@@ -121,7 +120,7 @@
+         }
+-    };
++    }
+ 
+     public FunctionManager(@Nullable File functionDirIn, MinecraftServer serverIn)
+     {
+@@ -121,7 +119,7 @@
                  int j = 0;
                  FunctionObject.Entry[] afunctionobject$entry = function.getEntries();
  

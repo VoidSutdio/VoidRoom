@@ -28,7 +28,7 @@
 +            com.google.common.collect.ImmutableList<net.minecraftforge.common.BiomeManager.BiomeEntry> biomesToAdd = net.minecraftforge.common.BiomeManager.getBiomes(type);
 +            int idx = type.ordinal();
 +
-+            if (biomes[idx] == null) biomes[idx] = new java.util.ArrayList<net.minecraftforge.common.BiomeManager.BiomeEntry>();
++            if (biomes[idx] == null) biomes[idx] = new java.util.ArrayList<>();
 +            if (biomesToAdd != null) biomes[idx].addAll(biomesToAdd);
 +        }
 +

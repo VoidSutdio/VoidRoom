@@ -1,5 +1,19 @@
 --- before/net/minecraft/world/storage/MapStorage.java
 +++ after/net/minecraft/world/storage/MapStorage.java
+@@ -17,10 +17,10 @@
+ 
+ public class MapStorage
+ {
+-    private final ISaveHandler saveHandler;
++    protected final ISaveHandler saveHandler;
+     protected Map<String, WorldSavedData> loadedDataMap = Maps.newHashMap();
+-    private final List<WorldSavedData> loadedDataList = Lists.newArrayList();
+-    private final Map<String, Short> idCounts = Maps.newHashMap();
++    protected final List<WorldSavedData> loadedDataList = Lists.newArrayList();
++    protected final Map<String, Short> idCounts = Maps.newHashMap();
+ 
+     public MapStorage(ISaveHandler saveHandlerIn)
+     {
 @@ -56,9 +56,14 @@
                              throw new RuntimeException("Failed to instantiate " + clazz, exception);
                          }
@@ -53,3 +67,12 @@
                  }
              }
              catch (Exception exception)
+@@ -127,7 +143,7 @@
+         }
+     }
+ 
+-    private void loadIdCounts()
++    protected void loadIdCounts()
+     {
+         try
+         {
