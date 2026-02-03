@@ -614,7 +614,7 @@
 +            }
 +        }
 +
-+        public void add(double x, long t) {
++        public synchronized void add(double x, long t) {
 +            time -= times[index];
 +            total -= samples[index] * times[index];
 +            samples[index] = x;
@@ -626,7 +626,7 @@
 +            }
 +        }
 +
-+        public double getAverage() {
++        public synchronized double getAverage() {
 +            return total / time;
 +        }
 +    }
