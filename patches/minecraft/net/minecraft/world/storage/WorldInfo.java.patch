@@ -26,7 +26,7 @@
  
  public class WorldInfo
  {
-@@ -56,15 +63,18 @@
+@@ -56,17 +63,20 @@
      private boolean difficultyLocked;
      private double borderCenterX;
      private double borderCenterZ;
@@ -43,12 +43,16 @@
 -    private final Map<DimensionType, NBTTagCompound> dimensionData = Maps.newEnumMap(DimensionType.class);
 +    private final Map<Integer, NBTTagCompound> dimensionData = Maps.newHashMap();
      private GameRules gameRules = new GameRules();
+-
+-    protected WorldInfo()
 +    private java.util.Map<String, net.minecraft.nbt.NBTBase> additionalProperties;
 +
 +    public WorldServer world;
- 
-     protected WorldInfo()
++
++    public WorldInfo()
      {
+     }
+ 
 @@ -74,7 +84,6 @@
      {
          fixer.registerWalker(FixTypes.LEVEL, new IDataWalker()
@@ -98,7 +102,16 @@
          }
  
          nbt.setTag("DimensionData", nbttagcompound1);
-@@ -443,17 +456,17 @@
+@@ -395,6 +408,8 @@
+         return this.randomSeed;
+     }
+ 
++    public void setSeed(long seed) { this.randomSeed = seed; }
++
+     public int getSpawnX()
+     {
+         return this.spawnX;
+@@ -443,17 +458,17 @@
          this.spawnY = y;
      }
  
@@ -122,7 +135,7 @@
      public void setWorldTime(long time)
      {
          this.worldTime = time;
-@@ -509,6 +522,14 @@
+@@ -509,6 +524,14 @@
  
      public void setThundering(boolean thunderingIn)
      {
@@ -137,7 +150,7 @@
          this.thundering = thunderingIn;
      }
  
-@@ -529,6 +550,14 @@
+@@ -529,6 +552,14 @@
  
      public void setRaining(boolean isRaining)
      {
@@ -152,7 +165,16 @@
          this.raining = isRaining;
      }
  
-@@ -704,11 +733,16 @@
+@@ -587,6 +618,8 @@
+         return this.generatorOptions == null ? "" : this.generatorOptions;
+     }
+ 
++    public void setGeneratorOptions(String opts) { this.generatorOptions = opts; }
++
+     public boolean areCommandsAllowed()
+     {
+         return this.allowCommands;
+@@ -704,11 +737,16 @@
  
      public EnumDifficulty getDifficulty()
      {
@@ -170,7 +192,7 @@
          this.difficulty = newDifficulty;
      }
  
-@@ -731,22 +765,13 @@
+@@ -731,22 +769,13 @@
                  return String.valueOf(WorldInfo.this.getSeed());
              }
          });
@@ -196,7 +218,7 @@
          category.addDetail("Level generator options", new ICrashReportDetail<String>()
          {
              public String call() throws Exception
-@@ -792,56 +817,70 @@
+@@ -792,56 +821,70 @@
                              s = "Anvil";
                      }
                  }
@@ -303,7 +325,7 @@
      }
  
      @SideOnly(Side.CLIENT)
-@@ -860,5 +899,26 @@
+@@ -860,5 +903,26 @@
      public String getVersionName()
      {
          return this.versionName;
