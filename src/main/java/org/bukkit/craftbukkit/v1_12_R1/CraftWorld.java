@@ -16,7 +16,6 @@ import java.util.UUID;
 
 import net.minecraft.block.BlockChorusFlower;
 import net.minecraft.block.BlockLeaves;
-import net.minecraft.block.BlockNewLeaf;
 import net.minecraft.block.BlockOldLeaf;
 import net.minecraft.block.BlockOldLog;
 import net.minecraft.block.BlockPlanks;
@@ -117,19 +116,14 @@ import net.minecraft.network.play.server.SPacketCustomSound;
 import net.minecraft.network.play.server.SPacketEffect;
 import net.minecraft.network.play.server.SPacketParticles;
 import net.minecraft.network.play.server.SPacketTimeUpdate;
-import net.minecraft.network.play.server.SPacketWorldBorder;
 import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.MinecraftException;
-import net.minecraft.world.WorldProviderEnd;
-import net.minecraft.world.WorldProviderHell;
-import net.minecraft.world.WorldProviderSurface;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraft.world.gen.feature.WorldGenBigMushroom;
@@ -345,7 +339,7 @@ public class CraftWorld implements World {
             return false;
         }
 
-        this.world.getChunkProvider().cancelUnload(x, z);
+        this.world.getChunkProvider().removeDroppingChunk(x, z);
 
         net.minecraft.world.chunk.Chunk chunk = null;
 
@@ -356,7 +350,7 @@ public class CraftWorld implements World {
         }
 
         if (chunk != null) {
-            this.world.getChunkProvider().putLoadedChunk(chunk.x, chunk.z, chunk);
+            this.world.getChunkProvider().addLoadedChunk(chunk.x, chunk.z, chunk);
 
             chunk.onLoad();
             chunk.populateCB(this.world.getChunkProvider(), this.world.getChunkProvider().chunkGenerator, true);

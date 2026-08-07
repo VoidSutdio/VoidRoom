@@ -20,11 +20,9 @@
 package net.minecraftforge.common.chunkio;
 
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkDataEvent;
 
@@ -106,7 +104,7 @@ class ChunkIOProvider implements Runnable
         this.chunk.setLastSaveTime(provider.world.getTotalWorldTime());
         this.provider.chunkGenerator.recreateStructures(this.chunk, this.chunkInfo.x, this.chunkInfo.z);
 
-        this.provider.putLoadedChunk(this.chunkInfo.x, this.chunkInfo.z, this.chunk);
+        this.provider.addLoadedChunk(this.chunkInfo.x, this.chunkInfo.z, this.chunk);
         this.chunk.onLoad();
         this.chunk.populateCB(provider, provider.chunkGenerator, false);
 
