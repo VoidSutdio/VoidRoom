@@ -5,7 +5,7 @@ CatRoom is a Cleanroom+Bukkit+Spigot server software forked from [CatServer](htt
 
 This fork is supporting by VoidStudio. We are on [Discord](https://discord.gg/RXUY7nkEKY)!
 
-Cleanroom version: 0.6.8-alpha
+Cleanroom version: 0.6.10-alpha
 
 ## This edition is intended solely for VoidStudio servers. This edition will not support for public usage
 
