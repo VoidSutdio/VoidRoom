@@ -29,7 +29,7 @@
 +    }
 +    // CraftBukkit end
 +
-+    public static boolean skipHopperEvents = false; // CatServer
++    public static boolean skipHopperEvents = true; // CatServer
  
      public static void registerFixesHopper(DataFixer fixer)
      {

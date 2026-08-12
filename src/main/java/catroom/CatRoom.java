@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class CatRoom {
+public final class CatRoom {
 	public static final Map<String, String> forgeCommandPerms = new ConcurrentHashMap<>();
 
 	public static String getForgeCommandPermission(ICommand command) {

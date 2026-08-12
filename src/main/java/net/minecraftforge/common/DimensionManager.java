@@ -30,16 +30,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
-import it.unimi.dsi.fastutil.ints.IntIterator;
-import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.ints.IntSets;
-import it.unimi.dsi.fastutil.ints.IntSortedSet;
+import it.unimi.dsi.fastutil.ints.*;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
@@ -187,7 +178,7 @@ public class DimensionManager
         return getWorld(dim).provider;
     }
 
-    public static Integer[] getIDs(boolean check)
+    public static int[] getIDs(boolean check)
     {
         if (check)
         {
@@ -214,9 +205,9 @@ public class DimensionManager
         return getIDs();
     }
 
-    public static Integer[] getIDs()
+    public static int[] getIDs()
     {
-        return worlds.keySet().toArray(new Integer[0]); // Only loaded dims, since usually used to cycle through loaded worlds
+        return worlds.keySet().toIntArray(); // Only loaded dims, since usually used to cycle through loaded worlds
     }
 
     public static void setWorld(int id, @Nullable WorldServer world, MinecraftServer server)
@@ -241,13 +232,10 @@ public class DimensionManager
             FMLLog.log.info("Unloading dimension {}", id);
         }
 
-        ArrayList<WorldServer> tmp = new ArrayList<WorldServer>();
-        if (worlds.get( 0) != null)
-            tmp.add(worlds.get( 0));
-        if (worlds.get(-1) != null)
-            tmp.add(worlds.get(-1));
-        if (worlds.get( 1) != null)
-            tmp.add(worlds.get( 1));
+        ArrayList<WorldServer> tmp = new ArrayList<>();
+        if (worlds.get( 0) != null) tmp.add(worlds.get( 0));
+        if (worlds.get(-1) != null) tmp.add(worlds.get(-1));
+        if (worlds.get( 1) != null) tmp.add(worlds.get( 1));
 
         for (Int2ObjectMap.Entry<WorldServer> entry : worlds.int2ObjectEntrySet())
         {
@@ -415,7 +403,7 @@ public class DimensionManager
     /*
      * To be called by the server at the appropriate time, do not call from mod code.
      */
-    public static void unloadWorlds(Hashtable<Integer, long[]> worldTickTimes)
+    public static void unloadWorlds()
     {
         IntIterator queueIterator = unloadQueue.iterator();
         while (queueIterator.hasNext())

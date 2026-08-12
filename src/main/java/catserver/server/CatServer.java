@@ -2,7 +2,6 @@ package catserver.server;
 
 import catserver.server.threads.AsyncChatThread;
 import catserver.server.threads.AsyncTaskThread;
-import catserver.server.threads.RealtimeThread;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.storage.ISaveHandler;
