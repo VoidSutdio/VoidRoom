@@ -1,5 +1,16 @@
 --- before/net/minecraft/world/storage/ThreadedFileIOBase.java
 +++ after/net/minecraft/world/storage/ThreadedFileIOBase.java
+@@ -8,8 +8,8 @@
+ {
+     private static final ThreadedFileIOBase INSTANCE = new ThreadedFileIOBase();
+     private final List<IThreadedFileIO> threadedIOQueue = Collections.synchronizedList(Lists.newArrayList());
+-    private volatile long writeQueuedCounter;
+-    private volatile long savedIOCounter;
++    private final java.util.concurrent.atomic.AtomicLong writeQueuedCounter = new java.util.concurrent.atomic.AtomicLong();
++    private final java.util.concurrent.atomic.AtomicLong savedIOCounter = new java.util.concurrent.atomic.AtomicLong();
+     private volatile boolean isThreadWaiting;
+ 
+     private ThreadedFileIOBase()
 @@ -35,7 +35,7 @@
  
      private void processQueue()
@@ -14,7 +25,7 @@
              {
                  this.threadedIOQueue.remove(i--);
 -                this.savedIOCounter++;
-+                ++this.savedIOCounter;
++                this.savedIOCounter.incrementAndGet();
              }
  
 +            /*
@@ -34,7 +45,16 @@
          if (!this.threadedIOQueue.contains(fileIo))
          {
 -            this.writeQueuedCounter++;
-+            ++this.writeQueuedCounter;
++            this.writeQueuedCounter.incrementAndGet();
              this.threadedIOQueue.add(fileIo);
          }
      }
+@@ -82,7 +84,7 @@
+     {
+         this.isThreadWaiting = true;
+ 
+-        while (this.writeQueuedCounter != this.savedIOCounter)
++        while (this.writeQueuedCounter.get() == this.savedIOCounter.get())
+         {
+             Thread.sleep(10L);
+         }

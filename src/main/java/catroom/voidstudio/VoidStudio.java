@@ -7,6 +7,8 @@ import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class VoidStudio {
 	public static void worldTick(int tickCounter, Int2ObjectOpenHashMap<long[]> worldTickTimes) {
