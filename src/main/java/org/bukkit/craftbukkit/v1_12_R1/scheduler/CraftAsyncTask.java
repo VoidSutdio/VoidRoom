@@ -8,9 +8,8 @@ import java.util.logging.Level;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitWorker;
 
-class CraftAsyncTask extends CraftTask {
-
-    private final LinkedList<BukkitWorker> workers = new LinkedList<BukkitWorker>();
+class CraftAsyncTask extends CraftTask { // TODO: it needs tests
+    private final LinkedList<BukkitWorker> workers = new LinkedList<>();
     private final Map<Integer, CraftTask> runners;
 
     CraftAsyncTask(final Map<Integer, CraftTask> runners, final Plugin plugin, final Runnable task, final int id, final long delay) {

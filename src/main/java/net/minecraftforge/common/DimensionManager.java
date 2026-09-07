@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Multiset;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedServer;
@@ -180,27 +181,8 @@ public class DimensionManager
 
     public static int[] getIDs(boolean check)
     {
-        if (check)
-        {
-            List<World> allWorlds = Lists.newArrayList(weakWorldMap.keySet());
-            allWorlds.removeAll(worlds.values());
-            for (ListIterator<World> li = allWorlds.listIterator(); li.hasNext(); )
-            {
-                World w = li.next();
-                leakedWorlds.add(System.identityHashCode(w));
-            }
-            for (World w : allWorlds)
-            {
-                int leakCount = leakedWorlds.count(System.identityHashCode(w));
-                if (leakCount == 5)
-                {
-                    FMLLog.log.debug("The world {} ({}) may have leaked: first encounter (5 occurrences).\n", Integer.toHexString(System.identityHashCode(w)), w.getWorldInfo().getWorldName());
-                }
-                else if (leakCount % 5 == 0)
-                {
-                    FMLLog.log.debug("The world {} ({}) may have leaked: seen {} times.\n", Integer.toHexString(System.identityHashCode(w)), w.getWorldInfo().getWorldName(), leakCount);
-                }
-            }
+        if (check) {
+            checkLeakedWorlds();
         }
         return getIDs();
     }
@@ -208,6 +190,21 @@ public class DimensionManager
     public static int[] getIDs()
     {
         return worlds.keySet().toIntArray(); // Only loaded dims, since usually used to cycle through loaded worlds
+    }
+
+    public static void checkLeakedWorlds() {
+        ObjectArrayList<World> allWorlds = new ObjectArrayList<>(weakWorldMap.keySet());
+        allWorlds.removeAll(worlds.values());
+        allWorlds.forEach(world -> leakedWorlds.add(System.identityHashCode(world)));
+        allWorlds.forEach(world -> {
+            int leakCount = leakedWorlds.count(System.identityHashCode(world));
+
+            if (leakCount == 5) {
+                FMLLog.log.debug("The world {} ({}) may have leaked: first encounter (5 occurrences).\n", Integer.toHexString(System.identityHashCode(world)), world.getWorldInfo().getWorldName());
+            } else if (leakCount % 5 == 0) {
+                FMLLog.log.debug("The world {} ({}) may have leaked: seen {} times.\n", Integer.toHexString(System.identityHashCode(world)), world.getWorldInfo().getWorldName(), leakCount);
+            }
+        });
     }
 
     public static void setWorld(int id, @Nullable WorldServer world, MinecraftServer server)

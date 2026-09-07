@@ -1,5 +1,6 @@
 package catserver.server;
 
+import catroom.asynctools.IServerTickMarker;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -16,24 +17,24 @@ import java.util.function.Supplier;
 
 public class CatAsyncCatcher {
     public static boolean isMainThread() {
-        return Thread.currentThread() == MinecraftServer.getServerInst().primaryThread;
+        return Thread.currentThread() instanceof IServerTickMarker;
     }
 
     public static void catchOp(String reason) {
-//        if (AsyncCatcher.enabled && !isMainThread()) {
-//            throw new IllegalStateException( "Asynchronous " + reason + "!" );
-//        }
+        if (AsyncCatcher.enabled && !isMainThread()) {
+            throw new IllegalStateException( "Asynchronous " + reason + "!" );
+        }
     }
 
     public static boolean checkAsync(String reason) {
-//        if (AsyncCatcher.enabled && !isMainThread()) {
-//            if (!CatServer.getConfig().disableAsyncCatchWarn) {
-//                CatServer.log.warn("A Mod/Plugin try to async " + reason + ", it will be executed safely on the main server thread until return!");
-//                CatServer.log.warn("Please check the stacktrace in debug.log and report the author.");
-//            }
-//            CatServer.log.debug("Try to async " + reason, new Throwable());
-//            return true;
-//        }
+        if (AsyncCatcher.enabled && !isMainThread()) {
+            if (!CatServer.getConfig().disableAsyncCatchWarn) {
+                CatServer.log.warn("A Mod/Plugin try to async " + reason + ", it will be executed safely on the main server thread until return!");
+                CatServer.log.warn("Please check the stacktrace in debug.log and report the author.");
+            }
+            CatServer.log.debug("Try to async " + reason, new Throwable());
+            return true;
+        }
 /*        if (CatServer.getConfig().disableAsyncCatcher) {
             if (!CatServer.getConfig().disableAsyncCatchWarn && !isMainThread()) {
                 CatServer.log.warn("A Mod/Plugin try to async " + reason + ", async catcher is disabled!");

@@ -11,6 +11,7 @@ interface ProjectConstants {
     List<String> COMPILER_JVM_ARGUMENTS = [
         '--add-exports=java.base/jdk.internal.misc=ALL-UNNAMED',
         '--add-exports=java.base/jdk.internal.reflect=ALL-UNNAMED',
+        '--add-exports=java.base/jdk.internal.vm.annotation=ALL-UNNAMED',
         '-Xlint:-removal', // Suppress Timings deprecation warnings
         '--add-modules=jdk.incubator.vector' // CatRoom - SIMD support
     ]

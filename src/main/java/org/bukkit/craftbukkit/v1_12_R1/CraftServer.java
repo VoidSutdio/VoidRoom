@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 
+import catroom.asynctools.IServerTickMarker;
 import catserver.server.CatAsyncCatcher;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.minecraft.advancements.Advancement;
@@ -182,7 +183,7 @@ public final class CraftServer implements Server {
     private final SimpleHelpMap helpMap = new SimpleHelpMap(this);
     private final StandardMessenger messenger = new StandardMessenger();
     private final SimplePluginManager pluginManager = new SimplePluginManager(this, commandMap);
-    protected final MinecraftServer console;
+    public final MinecraftServer console;
     protected final DedicatedPlayerList playerList;
     private final Map<String, World> worlds = new it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap<>(); // CatRoom - Replace world map with optimized collections
     private YamlConfiguration configuration;
@@ -1619,7 +1620,7 @@ public final class CraftServer implements Server {
 
     @Override
     public boolean isPrimaryThread() {
-        return Thread.currentThread().equals(console.primaryThread);
+        return Thread.currentThread() instanceof IServerTickMarker;
     }
 
     @Override
